@@ -7,10 +7,12 @@ import (
 	"github.com/burenotti/urlshortener/internal/handler"
 	"github.com/burenotti/urlshortener/internal/service"
 	"github.com/burenotti/urlshortener/internal/storage"
+	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -32,8 +34,21 @@ func main() {
 		logrus.Fatalf("can't connect to postgres: %s", err.Error())
 	}
 
-	pgStorage := storage.NewPostgresStorage(pool)
-	store := storage.NewStorage(pgStorage)
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     viper.GetString("REDIS_ADDR"),
+		Password: viper.GetString("REDIS_PASS"),
+		DB:       viper.GetInt("REDIS_DB"),
+	})
+	_, err = rdb.Ping(context.TODO()).Result()
+
+	if err != nil {
+		logrus.Fatalf("can't connect to redis: %s", err.Error())
+	}
+
+	mainShortener := storage.NewPostgresStorage(pool)
+	cacheShortener := storage.NewRedisStorage(rdb, 1*time.Hour)
+	composedShortener := storage.NewComposedShortener(mainShortener, cacheShortener)
+	store := storage.NewStorage(composedShortener)
 	serv := service.NewService(store)
 	viper.SetDefault("BASE_PATH", fmt.Sprintf("http://%s/l", addr))
 	handle := handler.NewHandler(serv, viper.GetString("BASE_PATH"))
