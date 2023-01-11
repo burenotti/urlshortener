@@ -3,9 +3,9 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = []
-  bin = "tmp/main"
-  cmd = "swag i -d cmd,internal && go build -o ./tmp/main /cmd/main"
+  args_bin = ["--host", "0.0.0.0"]
+  bin = "./tmp/main"
+  cmd = "swag i -d cmd,internal && go build -o ./tmp/main ./cmd/main.go"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
