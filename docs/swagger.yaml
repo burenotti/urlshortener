@@ -1,0 +1,108 @@
+definitions:
+  handler.JSONError:
+    properties:
+      error:
+        type: string
+    type: object
+  handler.createLinkResponse:
+    properties:
+      link_id:
+        type: string
+      url:
+        type: string
+    type: object
+  handler.getLinkInfoResponse:
+    properties:
+      url:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/link/:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: url to shorten
+        format: url
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.createLinkResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Creates a short link
+      tags:
+      - link
+  /api/link/{link_id}:
+    get:
+      parameters:
+      - description: Link ID
+        format: url
+        in: path
+        name: link_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.getLinkInfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.JSONError'
+      summary: Get information about shortened link
+      tags:
+      - link
+  /l/{link_id}:
+    get:
+      parameters:
+      - description: link ID
+        in: path
+        name: link_id
+        required: true
+        type: string
+      responses:
+        "308":
+          description: Permanent Redirect
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Redirect to source url
+      tags:
+      - link
+swagger: "2.0"

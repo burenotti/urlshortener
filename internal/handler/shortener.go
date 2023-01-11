@@ -7,6 +7,21 @@ import (
 	"net/url"
 )
 
+type createLinkResponse struct {
+	LinkID string `json:"link_id,"`
+	Url    string `json:"url,"`
+}
+
+// @Summary Creates a short link
+// @Tags link
+// @Accept json
+// @Produce json
+// @Param        url    query     string  true  "url to shorten"  Format(url)
+// @Success 201 {object} handler.createLinkResponse
+// @Failure 422 {object} handler.JSONError
+// @Failure 400 {object} handler.JSONError
+// @Failure 500 {object} handler.JSONError
+// @Router /api/link/ [post]
 func (h *Handler) createLink(c *gin.Context) {
 	srcUrl := c.Query("url")
 	if srcUrl == "" {
@@ -29,12 +44,25 @@ func (h *Handler) createLink(c *gin.Context) {
 		return
 	}
 
-	c.JSON(201, gin.H{
-		"link_id": linkID,
-		"url":     h.basePath + "/" + linkID,
+	c.JSON(201, createLinkResponse{
+		LinkID: linkID,
+		Url:    h.basePath + "/" + linkID,
 	})
 }
 
+type getLinkInfoResponse struct {
+	Url string `json:"url"`
+}
+
+// @Summary Get information about shortened link
+// @Tags link
+// @Produce json
+// @Param        link_id    path     string  true  "Link ID"  Format(url)
+// @Success 200 {object} handler.getLinkInfoResponse
+// @Failure 422 {object} handler.JSONError
+// @Failure 400 {object} handler.JSONError
+// @Failure 500 {object} handler.JSONError
+// @Router /api/link/{link_id} [get]
 func (h *Handler) getLinkInfo(c *gin.Context) {
 	linkID := c.Param("link_id")
 	if linkID == "" {
@@ -50,11 +78,16 @@ func (h *Handler) getLinkInfo(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{
-		"url": srcUrl,
-	})
+	c.JSON(200, getLinkInfoResponse{srcUrl})
 }
 
+// @Summary Redirect to source url
+// @Tags link
+// @Param link_id path string true "link ID"
+// @Success 308
+// @Failure 404 {string} Not Found
+// @Failure 500 {string} Internal Server Error
+// @Router /l/{link_id} [get]
 func (h *Handler) redirect(c *gin.Context) {
 	linkID := c.Param("link_id")
 	if linkID == "" {

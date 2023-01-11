@@ -1,8 +1,11 @@
 package handler
 
 import (
+	_ "github.com/burenotti/urlshortener/docs"
 	"github.com/burenotti/urlshortener/internal/service"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 )
 
@@ -29,5 +32,6 @@ func (h *Handler) InitRoutes() http.Handler {
 
 	router.GET("/l/:link_id", h.redirect)
 
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router
 }

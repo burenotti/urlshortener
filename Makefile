@@ -5,7 +5,7 @@ WINDOWS=$(EXECUTABLE)_windows_amd64.exe
 LINUX=$(EXECUTABLE)_linux_amd64
 
 .PHONY:
-all: build test clean
+all: docs build test clean
 
 windows:
 	go build -o ./bin/$(WINDOWS) './cmd/main.go'
@@ -14,6 +14,9 @@ unix:
 	go build -o ./bin/$(LINUX) './cmd/main.go'
 
 build: windows unix
+
+doc:
+	swag i -d cmd,internal
 
 dev:
 ifeq ($(OS), Windows_NT)
