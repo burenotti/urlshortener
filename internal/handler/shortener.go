@@ -29,9 +29,13 @@ func (h *Handler) createLink(c *gin.Context) {
 		return
 	}
 
-	_, err := url.Parse(srcUrl)
+	u, err := url.Parse(srcUrl)
 
-	if err != nil {
+	if u.Scheme == "" {
+		u.Scheme = "https"
+	}
+
+	if err != nil || u.Host == "" {
 		AbortWithJSONError(c, 422, "url is incorrect")
 		return
 	}
