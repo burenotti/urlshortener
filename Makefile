@@ -38,3 +38,9 @@ cover:
 
 clean:
 	rm ./bin/$(WINDOWS) ./bin/$(LINUX)
+
+up:
+	@migrate -database $(DB_DSN) -path ./migrations up $(c)
+
+down:
+	@migrate -database $(DB_DSN) -path ./migrations down $(c)

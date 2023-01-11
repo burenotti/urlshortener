@@ -28,6 +28,19 @@ services:
     env_file:
       - ".env"
 
+  migrate:
+    image: migrate/migrate:latest
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    env_file:
+      - ".env"
+    command: ["-path", "/migrations", "-database", "${DB_DSN}?sslmode=disable", "up" ]
+    deploy:
+      replicas: 0
   redis:
     image: 'redis:alpine3.17'
     expose:

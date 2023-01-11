@@ -14,8 +14,8 @@ POSTGRES_USER=user
 POSTGRES_PASSWORD=pass
 POSTGRES_DB=urlshortener
 
-DB_DSN=postgresql://user:pass@localhost:5432/urlshortener
-REDIS_ADDR=localhost:6379
+DB_DSN=postgresql://user:pass@postgres:5432/urlshortener
+REDIS_ADDR=redis:6379
 REDIS_PASS=pass
 REDIS_DB=0
 ```
@@ -23,6 +23,9 @@ REDIS_DB=0
 Then you can use `docker-compose` to start the server:
 
 ```shell
+# run migrations
+docker-compose run --rm migrate
+
 # will start server on localhost:8080
 docker-compose -f docker-compose.yml up
 ```
