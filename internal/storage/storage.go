@@ -3,19 +3,28 @@ package storage
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 type Storage struct {
 	Shortener
+	Statistics
 }
 
-func NewStorage(shortener Shortener) *Storage {
-	return &Storage{Shortener: shortener}
+func NewStorage(shortener Shortener, stat Statistics) *Storage {
+	return &Storage{
+		Shortener:  shortener,
+		Statistics: stat,
+	}
 }
 
 type Shortener interface {
 	SaveShortLink(ctx context.Context, linkID string, url string) error
 	GetSource(ctx context.Context, linkID string) (string, error)
+}
+
+type Statistics interface {
+	RegisterRedirect(ctx context.Context, linkID, sessionID string, at time.Time) error
 }
 
 var (
