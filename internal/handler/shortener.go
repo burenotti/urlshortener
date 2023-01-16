@@ -3,7 +3,10 @@ package handler
 import (
 	"errors"
 	"github.com/burenotti/urlshortener/internal/storage"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 	"net/url"
 )
 
@@ -98,7 +101,19 @@ func (h *Handler) redirect(c *gin.Context) {
 		AbortWithJSONError(c, 400, "link_id is required path parameter")
 		return
 	}
-	srcUrl, err := h.services.GetSource(c, linkID)
+	session := sessions.Default(c)
+	sessionId, ok := session.Get("session_id").(string)
+	if !ok {
+		id, _ := uuid.NewRandom()
+		sessionId = id.String()
+		session.Set("session_id", sessionId)
+		err := session.Save()
+		if err != nil {
+			logrus.WithField("error", err).Errorf("Can't save session_id")
+		}
+	}
+
+	srcUrl, err := h.services.GetSourceForRedirect(c, sessionId, linkID)
 	if errors.Is(err, storage.ErrNoSourceUrl) {
 		c.AbortWithStatus(404)
 		return

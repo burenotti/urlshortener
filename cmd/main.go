@@ -7,6 +7,7 @@ import (
 	"github.com/burenotti/urlshortener/internal/handler"
 	"github.com/burenotti/urlshortener/internal/service"
 	"github.com/burenotti/urlshortener/internal/storage"
+	sessions "github.com/gin-contrib/sessions/redis"
 	"github.com/go-redis/redis/v8"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sirupsen/logrus"
@@ -48,14 +49,25 @@ func main() {
 	mainShortener := storage.NewPostgresStorage(pool)
 	cacheShortener := storage.NewRedisStorage(rdb, 1*time.Hour)
 	composedShortener := storage.NewComposedShortener(mainShortener, cacheShortener)
-	store := storage.NewStorage(composedShortener)
+	statStore := storage.NewPgStatStore(pool)
+	store := storage.NewStorage(composedShortener, statStore)
+
 	serv := service.NewService(store)
 	viper.SetDefault("BASE_PATH", fmt.Sprintf("http://%s/l", addr))
-	handle := handler.NewHandler(serv, viper.GetString("BASE_PATH"))
+
+	sessionStore, err := sessions.NewStore(
+		10,
+		"tcp",
+		viper.GetString("REDIS_ADDR"),
+		viper.GetString("REDIS_PASS"),
+		[]byte(viper.GetString("SESSION_AUTH_KEY")),
+	)
+
+	handle := handler.NewHandler(serv, sessionStore, viper.GetString("BASE_PATH"))
 
 	logrus.Infof("starting server on %s", addr)
 
-	err = http.ListenAndServe(addr, handle.InitRoutes())
+	err = http.ListenAndServe(addr, handle)
 	if err != nil {
 		logrus.Error("serving error: %s", err.Error())
 	}
